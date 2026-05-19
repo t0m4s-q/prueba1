@@ -1,0 +1,8 @@
+{
+  "name": "Sistema de Gestión de Turnos Clínicos",
+  "description": "Sistema web de gestión de turnos en tiempo real para clínicas con portal de pacientes y paneles internos para médicos y recepcionistas, usando Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
