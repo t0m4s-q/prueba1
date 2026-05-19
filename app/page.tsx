@@ -205,6 +205,15 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              ¿Es su primera vez en la clínica?{' '}
+              <a href="/registro" className="font-medium text-blue-600 hover:text-blue-500">
+                Regístrese aquí
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

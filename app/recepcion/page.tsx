@@ -285,7 +285,7 @@ export default function RecepcionPage() {
             </h3>
             
             {!pacienteBuscado ? (
-              <form onSubmit={handleSearchPaciente} className="space-y-4">
+              <form key="form-buscar" onSubmit={handleSearchPaciente} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">DNI del Paciente</label>
                   <div className="mt-1 flex rounded-md shadow-sm">
@@ -309,7 +309,7 @@ export default function RecepcionPage() {
                 {searchError && <p className="text-sm text-red-600">{searchError}</p>}
               </form>
             ) : (
-              <div className="space-y-4">
+              <div key="form-encontrado" className="space-y-4">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex justify-between items-start">
                    <div>
                      <p className="text-sm font-bold text-blue-900">

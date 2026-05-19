@@ -255,7 +255,7 @@ export default function EspecialistaPage() {
             </h2>
             
             {turnoEnAtencion ? (
-              <div className="flex-1 flex flex-col">
+              <div key="atendiendo" className="flex-1 flex flex-col">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-5 mb-6">
                   <div className="flex justify-between items-start">
                     <div>
@@ -294,7 +294,7 @@ export default function EspecialistaPage() {
                 </button>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+              <div key="libre" className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
                 <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Consultorio Libre</h3>
                 <p className="text-sm text-gray-500 mb-6">No hay ningún paciente en atención en este momento.</p>

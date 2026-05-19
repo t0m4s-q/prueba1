@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // fallback if service_role not set
-);
-
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE;
 
 export async function POST(req: Request) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const { especialista_id, sede_id } = await req.json();
 
     if (!especialista_id || !sede_id) {
@@ -21,18 +21,21 @@ export async function POST(req: Request) {
     const today = new Date().toISOString().split('T')[0];
 
     // 1. Obtener la fila en espera ordenada por posicion
+    const { data: estadoData } = await supabaseAdmin.from('estados_turno').select('id').eq('codigo', 'en_espera').single();
+    if (!estadoData) return NextResponse.json({ error: 'Estado en_espera no encontrado' }, { status: 500 });
+    
     const { data: turnos, error: turnosError } = await supabaseAdmin
       .from('turnos')
       .select(`
         id, posicion_fila, 
-        pacientes(dni, telefono, profiles(nombre, apellido)),
+        pacientes(dni, profiles(nombre, apellido, telefono)),
         especialistas(profiles(nombre, apellido)),
         sedes(nombre)
       `)
       .eq('especialista_id', especialista_id)
       .eq('sede_id', sede_id)
       .eq('fecha_turno', today)
-      .eq('estado_id', (await supabaseAdmin.from('estados_turno').select('id').eq('codigo', 'en_espera').single()).data?.id)
+      .eq('estado_id', estadoData.id)
       .order('posicion_fila', { ascending: true });
 
     if (turnosError) throw turnosError;
@@ -69,7 +72,7 @@ export async function POST(req: Request) {
              msj = msj.replace('{{nombre}}', nombrePaciente);
              msj = msj.replace('{{sede}}', nombreSede);
              msj = msj.replace('{{especialista}}', nombreEsp);
-             const telefono = (turno.pacientes as any)?.telefono || '5491111111111'; // Mock fallback
+             const telefono = (turno.pacientes as any)?.profiles?.telefono || '5491111111111'; // Mock fallback
              
              // Insertar / Update notificación
              let notifId = exists?.id;
