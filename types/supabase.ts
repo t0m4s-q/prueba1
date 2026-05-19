@@ -158,6 +158,12 @@ export interface Database {
         }
         Returns: boolean
       }
+      get_pacientes_adelante: {
+        Args: {
+          p_turno_id: string
+        }
+        Returns: number
+      }
     }
   }
 }

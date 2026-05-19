@@ -1,14 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { Stethoscope, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Stethoscope, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { user, roles, currentRole, setCurrentRole, isLoading, signOut } = useAuth();
+
+  // Handle redirection based on role
+  useEffect(() => {
+    if (!isLoading && user && currentRole) {
+      switch (currentRole) {
+        case 'recepcionista':
+          router.push('/recepcion');
+          break;
+        case 'especialista':
+          router.push('/especialista');
+          break;
+        case 'paciente':
+          router.push('/paciente');
+          break;
+        case 'admin':
+          router.push('/admin');
+          break;
+        default:
+          break;
+      }
+    }
+  }, [user, currentRole, isLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,16 +50,77 @@ export default function LoginPage() {
       if (error) {
         throw error;
       }
-
-      // Redirección se manejará con un middleware o useEffect una vez que implementemos la gestión de roles completa.
-      alert('Login exitoso. (La redirección por rol se implementará en el próximo paso)');
-      
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+      </div>
+    );
+  }
+
+  // Si ya tiene usuario, pero múltiples roles y no seleccionó ninguno
+  if (user && roles.length > 1 && !currentRole) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+          <Stethoscope className="mx-auto h-12 w-12 text-blue-600" />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+            Seleccione su Rol
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Su cuenta tiene múltiples perfiles asociados
+          </p>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow-sm sm:rounded-xl sm:px-10 border border-gray-100 flex flex-col space-y-4">
+            {roles.map((role) => (
+              <button
+                key={role.codigo}
+                onClick={() => setCurrentRole(role.codigo)}
+                className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <div className="flex flex-col text-left">
+                  <span className="capitalize">{role.codigo}</span>
+                  <span className="text-xs text-gray-500 font-normal">{role.descripcion}</span>
+                </div>
+                <ArrowRight className="h-4 w-4 text-gray-400" />
+              </button>
+            ))}
+
+            <button
+               onClick={signOut}
+               className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si ya está logueado y tiene rol (o no tiene roles asignados aun) pero useEffect aun no redirigió
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+          <Loader2 className="animate-spin h-8 w-8 text-blue-600 mb-4" />
+          <p className="text-gray-600 text-center">
+              {roles.length === 0 ? "No tienes roles asignados. Contacta al administrador." : "Redirigiendo..."}
+          </p>
+          {roles.length === 0 && (
+              <button onClick={signOut} className="mt-4 text-blue-600 underline">Cerrar Sesión</button>
+          )}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">

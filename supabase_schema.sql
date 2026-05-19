@@ -174,6 +174,35 @@ AFTER UPDATE ON turnos
 FOR EACH ROW
 EXECUTE FUNCTION recalcular_fila();
 
+-- Función para obtener pacientes adelante (Security Definer para bypassear RLS del paciente)
+CREATE OR REPLACE FUNCTION get_pacientes_adelante(p_turno_id UUID)
+RETURNS INT AS $$
+DECLARE
+  v_especialista_id UUID;
+  v_sede_id INT;
+  v_posicion_fila INT;
+  v_fecha_turno DATE;
+  v_count INT;
+BEGIN
+  SELECT especialista_id, sede_id, posicion_fila, fecha_turno
+  INTO v_especialista_id, v_sede_id, v_posicion_fila, v_fecha_turno
+  FROM turnos
+  WHERE id = p_turno_id;
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM turnos t
+  JOIN estados_turno e ON e.id = t.estado_id
+  WHERE t.especialista_id = v_especialista_id
+    AND t.sede_id = v_sede_id
+    AND t.fecha_turno = v_fecha_turno
+    AND e.codigo = 'en_espera'
+    AND t.posicion_fila < v_posicion_fila;
+
+  RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- ==========================================
 -- 8. RLS (ROW LEVEL SECURITY)
